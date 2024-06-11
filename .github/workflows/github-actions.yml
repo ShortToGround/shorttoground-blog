@@ -65,26 +65,12 @@ jobs:
           cd shorttoground-blog-infra/terraform
           echo "INSTANCE_IP=$(terraform output -raw instance_ip_addr)" >> "$GITHUB_ENV"
 
-    # Reserved for future change from scp to S3
-    #   - name: Install AWS CLI
-    #     run: sudo apt install awscli
-          
-    #   - name: Sync Playbook to S3 Bucket
-    #     env:
-    #       AWS_ACCESS_KEY_ID: ${{ steps.aws_creds.outputs.aws-access-key-id }}
-    #       AWS_SECRET_ACCESS_KEY: ${{ steps.aws_creds.outputs.aws-secret-access-key }}
-    #       AWS_SESSION_TOKEN: ${{ steps.aws_creds.outputs.aws-session-token }}
-    #       AWS_DEFAULT_REGION: "us-east-2"
-    #     run: |
-    #       cd shorttoground-blog-infra
-    #       aws s3 sync public s3://shorttoground-blog/public
-
       - name : Configure SSH
         run : |
             mkdir -p /home/runner/.ssh/
             touch /home/runner/.ssh/config
             touch /home/runner/.ssh/id_rsa
-            echo -e "${{secrets.SSH_PRIVATE_KEY}}" > /home/runner/.ssh/id_rsa
+            echo -e "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_rsa
             echo -e "Host $INSTANCE_IP\nIdentityFile /home/runner/.ssh/id_rsa" >> /home/runner/.ssh/config
             ssh-keyscan -H $INSTANCE_IP > /home/runner/.ssh/known_hosts
             eval `ssh-agent' -s`
@@ -94,16 +80,10 @@ jobs:
         run: ssh admin@$INSTANCE_IP 'sudo rm -rf /var/www/blog/; sudo mkdir -p /var/www/blog; mkdir -p blog-temp'
 
       - name: Copy Nginx config and move to proper dir
-        run: |
-          pwd
-          ls -ad */
-          scp nginx/blog.conf admin@$INSTANCE_IP:blog-temp/blog.conf
-          ssh admin@$INSTANCE_IP 'sudo rm -f /etc/nginx/sites-available/blog.conf; sudo mv blog-temp/blog.conf /etc/nginx/sites-available/blog.conf'
+        run: scp nginx/blog.conf admin@$INSTANCE_IP:blog-temp/blog.conf
 
       - name: Copy site data and move to proper dir
-        run: |
-          scp -r public/ admin@$INSTANCE_IP:blog-temp/public
-          ssh admin@$INSTANCE_IP 'sudo mv blog-temp/public /var/www/blog/'
+        run: scp -r public/ admin@$INSTANCE_IP:blog-temp/public
         
       - name: Install Ansible
         run: pip install ansible 
