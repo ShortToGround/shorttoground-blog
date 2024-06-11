@@ -75,6 +75,12 @@ jobs:
             ssh-keyscan -H $INSTANCE_IP > /home/runner/.ssh/known_hosts
             eval `ssh-agent' -s`
             chmod 700 /home/runner/.ssh/id_rsa
+
+      - name: Copy Nginx config and move to proper dir
+        run: scp nginx/blog.conf admin@$INSTANCE_IP:/tmp/blog.conf
+
+      - name: Copy site data and move to proper dir
+        run: scp -r public/ admin@$INSTANCE_IP:/tmp/public   
         
       - name: Install Ansible
         run: pip install ansible 
@@ -83,19 +89,3 @@ jobs:
         run: |
           cd shorttoground-blog-infra/ansible
           ansible-playbook -u admin -i "$INSTANCE_IP," playbook.yml --extra-vars "BLOG_FQDN=${{secrets.BLOG_FQDN}}"
-  
-      - name: Create blog directory and temp directory
-        run: ssh admin@$INSTANCE_IP 'sudo rm -rf /var/www/blog/; sudo mkdir -p /var/www/blog; mkdir -p blog-temp'
-
-      - name: Copy Nginx config and move to proper dir
-        run: |
-          scp nginx/blog.conf admin@$INSTANCE_IP:blog-temp/blog.conf
-          ssh admin@$INSTANCE_IP 'sudo rm -f /etc/nginx/sites-available/blog.conf; sudo mv blog-temp/blog.conf /etc/nginx/sites-available/blog.conf'
-
-      - name: Copy site data and move to proper dir
-        run: |
-          scp -r public/ admin@$INSTANCE_IP:blog-temp/public
-          ssh admin@$INSTANCE_IP 'sudo mv blog-temp/public /var/www/blog/'
-
-      - name: Restart Nginx Service
-        run:  ssh admin@$INSTANCE_IP 'sudo systemctl restart nginx.service'
