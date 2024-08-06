@@ -1,0 +1,103 @@
+# Github actions config file
+name: Build/Deploy Static Site
+on:
+  push:
+    branches:
+      - master
+
+env:
+  name: production
+      
+jobs:
+  build-site:
+# Perms needed for OpenID Connect integration to work
+    permissions:
+      id-token: write
+      contents: read
+
+    runs-on: 
+      - ubuntu-latest # GitHub provided ubuntu VM
+    steps:
+      - name : Checkout Blog Repo
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+    
+    # I decided to go ahead and build the site data first
+    # Hugo is used to build the site from the markdown files      
+      - name : Install Hugo
+        run: sudo apt install hugo
+
+      - name : Build Static Site
+        run : hugo  
+          
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+    
+      # All of the various IaC configs are found in the infra repo dedicated for this project
+      - name : Checkout Infra Config
+        uses: actions/checkout@v4
+        with:
+          repository: ShortToGround/shorttoground-blog-infra
+          path: "shorttoground-blog-infra"
+          
+      # Next we need to gather our credentials to auth to AWS
+      # In this case I have OpenID setup to a user in IAM
+      - name : Configure AWS Creds
+        id: aws_creds
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.TF_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+        
+      # Switch to terraform dir from the infra repo in or to properly init
+      - name: Init Terraform
+        run: |
+          cd shorttoground-blog-infra/terraform
+          terraform init
+      - name: Terraform Apply
+        env: 
+
+          TF_VAR_CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}  # Cloudfalre keys needed in order to edit the A records for the project
+          TF_VAR_CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}                # This is needed in order to pair with the new AWS instances for ssh access later on
+        run: |
+          cd shorttoground-blog-infra/terraform
+          terraform apply -auto-approve
+      
+      # In order connect to the server or change the DNS A record we will need the new instances public IP
+      - name: Get App Server IP
+        run: |
+          cd shorttoground-blog-infra/terraform
+          echo "INSTANCE_IP=$(terraform output -raw instance_ip_addr)" >> "$GITHUB_ENV"
+        
+        # In case a new VM is provisioned, this will give it time to get its ssh server up and running
+      - name: Sleep for 60 seconds
+        run: sleep 60
+
+      # This step sets up the SSH keys needed to connect to our new instance
+      - name : Configure SSH
+        continue-on-error: true
+        run : |
+            mkdir -p /home/runner/.ssh/
+            touch -f /home/runner/.ssh/config
+            echo -e "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_rsa
+            echo -e "Host $INSTANCE_IP\nIdentityFile /home/runner/.ssh/id_rsa" >> /home/runner/.ssh/config
+            ssh-keyscan -H $INSTANCE_IP > /home/runner/.ssh/known_hosts
+            eval `ssh-agent -s`
+            chmod 700 /home/runner/.ssh/id_rsa
+
+      - name: Copy Nginx config and move to proper dir
+        run: scp nginx/blog.conf admin@$INSTANCE_IP:/tmp/blog.conf
+
+      - name: Copy site data and move to proper dir
+        run: scp -r public/ admin@$INSTANCE_IP:/tmp/public   
+        
+      - name: Install Ansible
+        run: pip install ansible 
+
+      - name: Run Ansible Playbook
+        run: |
+          cd shorttoground-blog-infra/ansible
+          ansible-playbook -u admin -i "$INSTANCE_IP," playbook.yml --extra-vars "BLOG_FQDN=${{secrets.BLOG_FQDN}}"
