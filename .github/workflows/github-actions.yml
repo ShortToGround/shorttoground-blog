@@ -16,7 +16,7 @@ jobs:
       contents: read
 
     runs-on: 
-      - ubuntu-latest # GitHub provided ubuntu VM
+      - ubuntu-latest # GitHub provided ubuntu VM    
     steps:
       - name : Checkout Blog Repo
         uses: actions/checkout@v4
@@ -88,8 +88,6 @@ jobs:
             eval `ssh-agent -s`
             chmod 700 /home/runner/.ssh/id_rsa
 
-      - name: Copy Nginx config and move to proper dir
-        run: scp nginx/blog.conf admin@$INSTANCE_IP:/tmp/blog.conf
 
       - name: Copy site data and move to proper dir
         run: scp -r public/ admin@$INSTANCE_IP:/tmp/public   
