@@ -11,7 +11,7 @@ RUN wget "https://github.com/gohugoio/hugo/releases/download/v0.117.0/hugo_exten
 RUN tar xzvf hugo*
 
 # Gather blog data
-RUN git clone https://github.com/ShortToGround/shorttoground-blog.git
+RUN git clone --single-branch -b dev https://github.com/ShortToGround/shorttoground-blog.git
 
 # Generate static web data and move it to nginx dirs
 WORKDIR "/tmp/shorttoground-blog"
