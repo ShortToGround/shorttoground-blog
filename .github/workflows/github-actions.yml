@@ -87,10 +87,12 @@ jobs:
 
       - name : Build blog container
         run : |
+          cd shorttoground-blog
           docker build --tag 'shorttoground-blog-container' .
 
       - name : Publish container to GH registry
         run : |
+          cd shorttoground-blog
           docker push ghcr.io/shorttoground/shorttoground-blog-container:latest
 
       - name: Install Ansible
