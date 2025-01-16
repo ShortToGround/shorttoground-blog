@@ -87,7 +87,7 @@ jobs:
 
       - name : Build blog container
         run : |
-          docker build --tag 'shorttoground-blog-container'
+          docker build --tag 'shorttoground-blog-container' .
 
       - name : Publish container to GH registry
         run : |
