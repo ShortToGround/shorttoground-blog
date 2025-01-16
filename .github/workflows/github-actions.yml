@@ -95,6 +95,7 @@ jobs:
         run : |
           cd shorttoground-blog
           docker build --tag 'shorttoground-blog-container' .
+          docker tag shorttoground-blog-container ghcr.io/shorttoground/shorttoground-blog-container:latest
 
       - name : Publish container to GH registry
         run : |
