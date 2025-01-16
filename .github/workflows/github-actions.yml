@@ -10,7 +10,7 @@ env:
   name: production
       
 jobs:
-  build-site:
+  build-deploy-site:
 # Perms needed for OpenID Connect integration to work
     permissions:
       id-token: write
@@ -83,7 +83,13 @@ jobs:
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
         run : |
             echo $GH_CONTAINER_RW | sudo docker login ghcr.io -u $GH_USERNAME --password-stdin
-
+    
+        # This seems heavy handed when all I really want is my Dockerfile, is there a better way?
+      - name : Checkout Blog Data
+        uses: actions/checkout@v4
+        with:
+          repository: ShortToGround/shorttoground-blog
+          path: "shorttoground-blog"
 
       - name : Build blog container
         run : |
