@@ -76,7 +76,7 @@ jobs:
             ssh-keyscan -H $INSTANCE_IP > /home/runner/.ssh/known_hosts
             eval `ssh-agent -s`
             chmod 700 /home/runner/.ssh/id_rsa
-                
+
         # This seems heavy handed when all I really want is my Dockerfile, is there a better way?
       - name : Checkout Blog Data
         uses: actions/checkout@v4
@@ -95,7 +95,7 @@ jobs:
           GH_CONTAINER_RW: ${{ secrets.CONTAINER_REGISTRY_RW}}
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
         run : |
-          echo $GH_CONTAINER_RW | sudo docker login ghcr.io -u $GH_USERNAME --password-stdin
+          echo $GH_CONTAINER_RW | docker login ghcr.io -u $GH_USERNAME --password-stdin
           cd shorttoground-blog
           docker push ghcr.io/shorttoground/shorttoground-blog-container:latest
 
