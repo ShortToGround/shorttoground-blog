@@ -92,6 +92,7 @@ jobs:
           docker build --tag 'shorttoground-blog-container' .
           docker tag shorttoground-blog-container ghcr.io/shorttoground/shorttoground-blog-container:latest
 
+        # TODO: Add in a check here to see if the hashes match, if they do then there's no reason to overwrite
       - name : Publish container to GH registry        
         env :
           GH_CONTAINER_RW: ${{ secrets.CONTAINER_REGISTRY_RW}}
@@ -104,7 +105,10 @@ jobs:
       - name: Install Ansible
         run: pip install ansible 
 
+      - name: Install Ansible Docker community plugin
+        run: ansible-galaxy collection install community.docker
+
       - name: Run Ansible Playbook
         run: |
           cd shorttoground-blog-infra/ansible
-          ansible-playbook -u admin -i "$INSTANCE_IP," playbook.yml --extra-vars "BLOG_FQDN=${{secrets.BLOG_FQDN}}"
+          ansible-playbook -u admin -i "$INSTANCE_IP," playbook.yml --extra-vars "BLOG_FQDN=${{secrets.BLOG_FQDN}} GHCR_USERNAME=${{ secrets.GH_USERNAME }} GHCR_TOKEN=${{ secrets.CONTAINER_REGISTRY_RW}}" 
