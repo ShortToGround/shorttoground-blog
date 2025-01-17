@@ -25,4 +25,4 @@ RUN /bin/cp /tmp/shorttoground-blog/nginx/blog.conf /etc/nginx/nginx.conf
 RUN service nginx restart
 
 # Networking Config
-EXPOSE 80
+EXPOSE 8080
