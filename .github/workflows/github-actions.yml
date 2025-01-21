@@ -8,7 +8,9 @@ on:
 
 env:
   name: production
-      
+  current_branch: ${{ github.head_ref || github.ref_name }} 
+  
+
 jobs:
   build-deploy-site:
 # Perms needed for OpenID Connect integration to work
@@ -29,7 +31,8 @@ jobs:
         with:
           repository: ShortToGround/shorttoground-blog-infra
           path: "shorttoground-blog-infra"
-          
+          ref: current_branch
+
       # Next we need to gather our credentials to auth to AWS
       # In this case I have OpenID setup to a user in IAM
       - name : Configure AWS Creds
@@ -61,9 +64,9 @@ jobs:
           cd shorttoground-blog-infra/terraform
           echo "INSTANCE_IP=$(terraform output -raw instance_ip_addr)" >> "$GITHUB_ENV"
         
-        # In case a new VM is provisioned, this will give it time to get its ssh server up and running
-      - name: Sleep for 60 seconds
-        run: sleep 60
+    #     # In case a new VM is provisioned, this will give it time to get its ssh server up and running
+    #   - name: Sleep for 60 seconds
+    #     run: sleep 60
 
       # This step sets up the SSH keys needed to connect to our new instance
       - name : Configure SSH
@@ -83,11 +86,12 @@ jobs:
         with:
           repository: ShortToGround/shorttoground-blog
           path: "shorttoground-blog"
+          ref: current_branch
 
       - name : Build blog container
         run : |
           cd shorttoground-blog
-          docker build --tag 'shorttoground-blog-container' .
+          docker build --tag 'shorttoground-blog-container' --build-arg current_branch=${{ env.current_branch }} .
           docker tag shorttoground-blog-container ghcr.io/shorttoground/shorttoground-blog-container:latest
 
         # TODO: Add in a check here to see if the hashes match, if they do then there's no reason to overwrite
@@ -107,6 +111,8 @@ jobs:
         run: ansible-galaxy collection install community.docker
 
       - name: Run Ansible Playbook
+        env:
+            CURRENT_BRANCH: "${{ env.current_branch }}"
         run: |
           cd shorttoground-blog-infra/ansible
           ansible-playbook -u admin -i "$INSTANCE_IP," playbook.yml --extra-vars "BLOG_FQDN=${{secrets.BLOG_FQDN}} GHCR_USERNAME=${{ secrets.GH_USERNAME }} GHCR_TOKEN=${{ secrets.CONTAINER_REGISTRY_RW}}" 
