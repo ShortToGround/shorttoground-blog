@@ -7,7 +7,10 @@ RUN mkdir -p nginx
 
 # Dependencies
 # Going to add hugo versions as env variables later
-RUN apt-get -y update && DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confde" install -y git wget
+#RUN apt-get -y update && DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confde" install -y git wget
+# Ran into a weird error with above command "unknown force/refuse option 'confde'". 
+RUN apt-get -y update && apt-get install -y git wget
+
 RUN wget "https://github.com/gohugoio/hugo/releases/download/v0.117.0/hugo_extended_0.117.0_linux-amd64.tar.gz"
 RUN tar xzvf hugo*
 
