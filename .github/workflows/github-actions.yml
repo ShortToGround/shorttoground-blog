@@ -86,7 +86,7 @@ jobs:
         with:
           repository: ShortToGround/shorttoground-blog
           path: "shorttoground-blog"
-          ref: current_branch
+          ref: ${{ env.current_branch }}
 
       - name : Build blog container
         run : |
