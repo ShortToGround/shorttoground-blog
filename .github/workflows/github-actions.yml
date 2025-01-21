@@ -109,7 +109,13 @@ jobs:
           ref: dev
           repository: ShortToGround/shorttoground-blog
           path: "shorttoground-blog"
-
+      - name : Checkout Infra Config
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          repository: ShortToGround/shorttoground-blog-infra
+          path: "shorttoground-blog-infra"
+          
       - name : Build blog container
         run : |
           cd shorttoground-blog
