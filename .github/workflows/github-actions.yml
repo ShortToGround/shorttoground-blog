@@ -27,7 +27,6 @@ jobs:
       - name : Checkout Infra Config
         uses: actions/checkout@v4
         with:
-          ref: dev
           repository: ShortToGround/shorttoground-blog-infra
           path: "shorttoground-blog-infra"
           
@@ -82,7 +81,6 @@ jobs:
       - name : Checkout Blog Data
         uses: actions/checkout@v4
         with:
-          ref: dev
           repository: ShortToGround/shorttoground-blog
           path: "shorttoground-blog"
 
