@@ -31,7 +31,7 @@ jobs:
         with:
           repository: ShortToGround/shorttoground-blog-infra
           path: "shorttoground-blog-infra"
-          ref: current_branch
+          ref: ${{ env.current_branch }}
 
       # Next we need to gather our credentials to auth to AWS
       # In this case I have OpenID setup to a user in IAM
