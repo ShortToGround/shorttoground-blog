@@ -50,7 +50,7 @@ jobs:
           
       - name: Terraform Apply
         env: 
-          TF_VAR_CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}  # Cloudfalre keys needed in order to edit the A records for the project
+          TF_VAR_CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}  # Cloudflare keys needed in order to edit the A records for the project
           TF_VAR_CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           TF_VAR_SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}                # This is needed in order to pair with the new AWS instances for ssh access later on
@@ -63,10 +63,6 @@ jobs:
         run: |
           cd shorttoground-blog-infra/terraform
           echo "INSTANCE_IP=$(terraform output -raw instance_ip_addr)" >> "$GITHUB_ENV"
-        
-    #     # In case a new VM is provisioned, this will give it time to get its ssh server up and running
-    #   - name: Sleep for 60 seconds
-    #     run: sleep 60
 
       # This step sets up the SSH keys needed to connect to our new instance
       - name : Configure SSH
@@ -80,10 +76,11 @@ jobs:
             eval `ssh-agent -s`
             chmod 700 /home/runner/.ssh/id_rsa
 
-        # This seems heavy handed when all I really want is my Dockerfile, is there a better way?
-      - name : Checkout Blog Data
+      - name : Checkout Dockerfile from blog repo
         uses: actions/checkout@v4
         with:
+          sparse-checkout: |
+            Dockerfile
           repository: ShortToGround/shorttoground-blog
           path: "shorttoground-blog"
           ref: ${{ env.current_branch }}
