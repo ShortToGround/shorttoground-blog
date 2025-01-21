@@ -8,9 +8,15 @@ on:
 
 env:
   name: production
-      
+
+# jobs:  
+# build-deploy-vm:
+# wait-for-vm
+#   needs: build-deploy-vm
+# deploy-container
+#   needs: [build-deploy-vm, wait-for-vm]
 jobs:
-  build-deploy-site:
+  build-deploy-vm:
 # Perms needed for OpenID Connect integration to work
     permissions:
       id-token: write
@@ -62,10 +68,28 @@ jobs:
           cd shorttoground-blog-infra/terraform
           echo "INSTANCE_IP=$(terraform output -raw instance_ip_addr)" >> "$GITHUB_ENV"
         
+  wait-for-vm:
+    needs: build-deploy-vm
+    permissions: # Do I need these for this step??
+        id-token: write
+        contents: read
+
+    runs-on: 
+        - ubuntu-latest # GitHub provided ubuntu VM    
+    steps:
         # In case a new VM is provisioned, this will give it time to get its ssh server up and running
       - name: Sleep for 60 seconds
         run: sleep 60
 
+  deploy-container:
+    needs: [build-deploy-vm, wait-for-vm]
+    permissions: # Do I need these for this step??
+        id-token: write
+        contents: read
+
+    runs-on: 
+        - ubuntu-latest # GitHub provided ubuntu VM    
+    steps:
       # This step sets up the SSH keys needed to connect to our new instance
       - name : Configure SSH
         continue-on-error: true
