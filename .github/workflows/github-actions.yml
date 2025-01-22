@@ -55,6 +55,7 @@ jobs:
       # Next we will build our container and then publish it to the github registry
       - name : Build blog container
         run : |
+          ls -la
           docker build --tag 'shorttoground-blog-container' --build-arg PATH="${{ github.workspace }}" .
           docker tag shorttoground-blog-container ghcr.io/shorttoground/shorttoground-blog-container:latest
 
