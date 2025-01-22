@@ -21,16 +21,63 @@ jobs:
     runs-on: 
       - ubuntu-latest # GitHub provided ubuntu VM    
     steps:
+      # First we need to install all of our Dependencies and packages
+      - name: Install Dependencies
+        run: apt-get install -y hugo 
           
+      - name: Install Ansible
+        run: pip install ansible 
+          
+      - name: Install Ansible Docker community plugin
+        run: ansible-galaxy collection install community.docker
+
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
-    
+
+      # Checkout the blog data we need
+      - name : Checkout Blog Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ShortToGround/shorttoground-blog
+          path: "ShortToGround"
+          ref: ${{ env.current_branch }}
+
+      - name : Checkout Blog Theme
+        uses: actions/checkout@v4
+        with:
+          repository: ShortToGround/Loveit
+          path: "ShortToGround/shorttoground-blog/themes/"
+
+      # Now we actually build the blog data
+      # This should populate ShortToGround/shorttoground-blog/public/ with all of our blog data
+      - name : Build Blog Data
+        run: | 
+          cd ShortToGround/shorttoground-blog
+          hugo
+
+      # Next we will build our container and then publish it to the github registry
+      - name : Build blog container
+        run : |
+          cd shorttoground-blog
+          docker build --tag 'shorttoground-blog-container' --build-arg PATH="${{ github.workspace }}/ShortToGround/shorttoground-blog" .
+          docker tag shorttoground-blog-container ghcr.io/shorttoground/shorttoground-blog-container:latest
+
+        # TODO: Add in a check here to see if the hashes match, if they do then there's no reason to overwrite
+      - name : Publish container to GH registry        
+        env :
+          GH_CONTAINER_RW: ${{ secrets.CONTAINER_REGISTRY_RW}}
+          GH_USERNAME: ${{ secrets.GH_USERNAME }}
+        run : |
+          echo $GH_CONTAINER_RW | docker login ghcr.io -u $GH_USERNAME --password-stdin
+          cd shorttoground-blog
+          docker push ghcr.io/shorttoground/shorttoground-blog-container:latest
+
       # All of the various IaC configs are found in the infra repo dedicated for this project
       - name : Checkout Infra Config
         uses: actions/checkout@v4
         with:
           repository: ShortToGround/shorttoground-blog-infra
-          path: "shorttoground-blog-infra"
+          path: "ShortToGround/shorttoground-blog-infra"
           ref: ${{ env.current_branch }}
 
       # Next we need to gather our credentials to auth to AWS
@@ -75,37 +122,6 @@ jobs:
             ssh-keyscan -H $INSTANCE_IP > /home/runner/.ssh/known_hosts
             eval `ssh-agent -s`
             chmod 700 /home/runner/.ssh/id_rsa
-
-      - name : Checkout Dockerfile from blog repo
-        uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            Dockerfile
-          repository: ShortToGround/shorttoground-blog
-          path: "shorttoground-blog"
-          ref: ${{ env.current_branch }}
-
-      - name : Build blog container
-        run : |
-          cd shorttoground-blog
-          docker build --tag 'shorttoground-blog-container' --build-arg current_branch=${{ env.current_branch }} .
-          docker tag shorttoground-blog-container ghcr.io/shorttoground/shorttoground-blog-container:latest
-
-        # TODO: Add in a check here to see if the hashes match, if they do then there's no reason to overwrite
-      - name : Publish container to GH registry        
-        env :
-          GH_CONTAINER_RW: ${{ secrets.CONTAINER_REGISTRY_RW}}
-          GH_USERNAME: ${{ secrets.GH_USERNAME }}
-        run : |
-          echo $GH_CONTAINER_RW | docker login ghcr.io -u $GH_USERNAME --password-stdin
-          cd shorttoground-blog
-          docker push ghcr.io/shorttoground/shorttoground-blog-container:latest
-
-      - name: Install Ansible
-        run: pip install ansible 
-
-      - name: Install Ansible Docker community plugin
-        run: ansible-galaxy collection install community.docker
 
       - name: Run Ansible Playbook
         env:
