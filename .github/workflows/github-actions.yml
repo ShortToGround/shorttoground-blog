@@ -29,7 +29,7 @@ jobs:
       - name: Download Hugo
         run: |
             wget https://github.com/gohugoio/hugo/releases/download/v${{ env.hugo_version }}/hugo_extended_${{ env.hugo_version }}_linux-amd64.tar.gz
-            tar xzvf hugo* -C hugo
+            tar xzvf hugo_extended_${{ env.hugo_version }}_linux-amd64.tar.gz
 
       - name: Install Ansible
         run: pip install ansible 
@@ -50,7 +50,9 @@ jobs:
       # Now we actually build the blog data
       # This should populate ShortToGround/shorttoground-blog/public/ with all of our blog data
       - name : Build Blog Data
-        run: hugo/hugo
+        run: |
+          cd shorttoground-blog
+          ${{ github.workspace }}/hugo
 
       # Next we will build our container and then publish it to the github registry
       - name : Build blog container
