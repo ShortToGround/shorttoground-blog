@@ -3,8 +3,8 @@ FROM nginx:latest
 ARG path
 ENV path=${path}
 
-COPY $path/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY $path/public /var/www/blog/public
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY public /var/www/blog/public
 
 # Restart nginx to load new config
 RUN service nginx restart
