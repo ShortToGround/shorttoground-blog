@@ -1,7 +1,7 @@
 FROM nginx:latest
 
 ARG path
-ENV path=$PATH
+ENV path=${path}
 
 COPY $path/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY $path/public /var/www/blog/public
