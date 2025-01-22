@@ -65,7 +65,6 @@ jobs:
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
         run : |
           echo $GH_CONTAINER_RW | docker login ghcr.io -u $GH_USERNAME --password-stdin
-          cd shorttoground-blog
           docker push ghcr.io/shorttoground/shorttoground-blog-container:latest
 
       # All of the various IaC configs are found in the infra repo dedicated for this project
