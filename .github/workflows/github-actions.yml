@@ -55,7 +55,7 @@ jobs:
       # Next we will build our container and then publish it to the github registry
       - name : Build blog container
         run : |
-          docker build --tag 'shorttoground-blog-container' --build-arg PATH="${{ github.workspace }}/ShortToGround/shorttoground-blog" .
+          docker build --tag 'shorttoground-blog-container' --build-arg PATH="${{ github.workspace }}" .
           docker tag shorttoground-blog-container ghcr.io/shorttoground/shorttoground-blog-container:latest
 
         # TODO: Add in a check here to see if the hashes match, if they do then there's no reason to overwrite
