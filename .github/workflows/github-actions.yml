@@ -50,9 +50,7 @@ jobs:
       # Now we actually build the blog data
       # This should populate ShortToGround/shorttoground-blog/public/ with all of our blog data
       - name : Build Blog Data
-        run: |
-          cd shorttoground-blog
-          ${{ github.workspace }}/hugo
+        run: ${{ github.workspace }}/hugo
 
       # Next we will build our container and then publish it to the github registry
       - name : Build blog container
