@@ -1,1 +1,0 @@
-# This is where theme data for Hugo will go
