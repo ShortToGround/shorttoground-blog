@@ -8,7 +8,10 @@ on:
 
 env:
   name: production
-      
+  current_branch: ${{ github.head_ref || github.ref_name }}
+  hugo_version: "0.142.0"
+  
+
 jobs:
   build-deploy-site:
 # Perms needed for OpenID Connect integration to work
@@ -19,17 +22,59 @@ jobs:
     runs-on: 
       - ubuntu-latest # GitHub provided ubuntu VM    
     steps:
+      # First we need to install all of our Dependencies and packages
+      - name: Install Dependencies
+        run: sudo apt-get install -y wget 
+        
+      - name: Download Hugo
+        run: |
+            wget https://github.com/gohugoio/hugo/releases/download/v${{ env.hugo_version }}/hugo_extended_${{ env.hugo_version }}_linux-amd64.tar.gz
+            tar xzvf hugo* -C /tmp
+
+      - name: Install Ansible
+        run: pip install ansible 
           
+      - name: Install Ansible Docker community plugin
+        run: ansible-galaxy collection install community.docker
+
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
-    
+
+      # Checkout the blog data we need
+      - name : Checkout Blog Repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.current_branch }}
+          submodules: true
+
+      # Now we actually build the blog data
+      # This should populate ShortToGround/shorttoground-blog/public/ with all of our blog data
+      - name : Build Blog Data
+        run: /tmp/hugo
+            
+      # Next we will build our container and then publish it to the github registry
+      - name : Build blog container
+        run : |
+          docker build --tag 'shorttoground-blog-container' --build-arg PATH="${{ github.workspace }}" .
+          docker tag shorttoground-blog-container ghcr.io/shorttoground/shorttoground-blog-container:latest
+
+        # TODO: Add in a check here to see if the hashes match, if they do then there's no reason to overwrite
+      - name : Publish container to GH registry        
+        env :
+          GH_CONTAINER_RW: ${{ secrets.CONTAINER_REGISTRY_RW}}
+          GH_USERNAME: ${{ secrets.GH_USERNAME }}
+        run : |
+          echo $GH_CONTAINER_RW | docker login ghcr.io -u $GH_USERNAME --password-stdin
+          docker push ghcr.io/shorttoground/shorttoground-blog-container:latest
+
       # All of the various IaC configs are found in the infra repo dedicated for this project
       - name : Checkout Infra Config
         uses: actions/checkout@v4
         with:
           repository: ShortToGround/shorttoground-blog-infra
           path: "shorttoground-blog-infra"
-          
+          ref: ${{ env.current_branch }}
+
       # Next we need to gather our credentials to auth to AWS
       # In this case I have OpenID setup to a user in IAM
       - name : Configure AWS Creds
@@ -47,7 +92,7 @@ jobs:
           
       - name: Terraform Apply
         env: 
-          TF_VAR_CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}  # Cloudfalre keys needed in order to edit the A records for the project
+          TF_VAR_CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}  # Cloudflare keys needed in order to edit the A records for the project
           TF_VAR_CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           TF_VAR_SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}                # This is needed in order to pair with the new AWS instances for ssh access later on
@@ -60,10 +105,6 @@ jobs:
         run: |
           cd shorttoground-blog-infra/terraform
           echo "INSTANCE_IP=$(terraform output -raw instance_ip_addr)" >> "$GITHUB_ENV"
-        
-        # In case a new VM is provisioned, this will give it time to get its ssh server up and running
-      - name: Sleep for 60 seconds
-        run: sleep 60
 
       # This step sets up the SSH keys needed to connect to our new instance
       - name : Configure SSH
@@ -77,36 +118,9 @@ jobs:
             eval `ssh-agent -s`
             chmod 700 /home/runner/.ssh/id_rsa
 
-        # This seems heavy handed when all I really want is my Dockerfile, is there a better way?
-      - name : Checkout Blog Data
-        uses: actions/checkout@v4
-        with:
-          repository: ShortToGround/shorttoground-blog
-          path: "shorttoground-blog"
-
-      - name : Build blog container
-        run : |
-          cd shorttoground-blog
-          docker build --tag 'shorttoground-blog-container' .
-          docker tag shorttoground-blog-container ghcr.io/shorttoground/shorttoground-blog-container:latest
-
-        # TODO: Add in a check here to see if the hashes match, if they do then there's no reason to overwrite
-      - name : Publish container to GH registry        
-        env :
-          GH_CONTAINER_RW: ${{ secrets.CONTAINER_REGISTRY_RW}}
-          GH_USERNAME: ${{ secrets.GH_USERNAME }}
-        run : |
-          echo $GH_CONTAINER_RW | docker login ghcr.io -u $GH_USERNAME --password-stdin
-          cd shorttoground-blog
-          docker push ghcr.io/shorttoground/shorttoground-blog-container:latest
-
-      - name: Install Ansible
-        run: pip install ansible 
-
-      - name: Install Ansible Docker community plugin
-        run: ansible-galaxy collection install community.docker
-
       - name: Run Ansible Playbook
+        env:
+            CURRENT_BRANCH: "${{ env.current_branch }}"
         run: |
           cd shorttoground-blog-infra/ansible
           ansible-playbook -u admin -i "$INSTANCE_IP," playbook.yml --extra-vars "BLOG_FQDN=${{secrets.BLOG_FQDN}} GHCR_USERNAME=${{ secrets.GH_USERNAME }} GHCR_TOKEN=${{ secrets.CONTAINER_REGISTRY_RW}}" 

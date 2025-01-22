@@ -17,7 +17,7 @@ languageName = "English"
 hasCJKLanguage = false
 
 # default amount of posts in each pages
-paginate = 12
+pagination.pagerSize = 12
 # google analytics code [UA-XXXXXXXX-X]
 googleAnalytics = ""
 # copyright description used only for seo schema
@@ -129,7 +129,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken", "
   # Section (all posts) page config
   [params.section]
     # special amount of posts in each section page
-    paginate = 20
+    pagination.pagerSize = 20
     # date format (month and day)
     dateFormat = "01-02"
     # amount of RSS pages
@@ -138,7 +138,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken", "
   # List (category or tag) page config
   [params.list]
     # special amount of posts in each list page
-    paginate = 20
+    pagination.pagerSize = 20
     # date format (month and day)
     dateFormat = "01-02"
     # amount of RSS pages
@@ -206,7 +206,7 @@ ignoreErrors = ["error-remote-getjson", "error-missing-instagram-accesstoken", "
     [params.home.posts]
       enable = true
       # special amount of posts in each home posts page
-      paginate = 6
+      pagination.pagerSize = 6
   # Social config in home page
   [params.social]
     GitHub = ""
