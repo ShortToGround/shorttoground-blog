@@ -4,7 +4,7 @@ ARG path
 ENV path=$PATH
 
 COPY $PATH/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY $PATH/public /var/www/blog/public
+COPY public /var/www/blog/public
 
 # Restart nginx to load new config
 RUN service nginx restart
