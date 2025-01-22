@@ -23,7 +23,7 @@ jobs:
     steps:
       # First we need to install all of our Dependencies and packages
       - name: Install Dependencies
-        run: apt-get install -y hugo 
+        run: sudo apt-get install -y hugo 
           
       - name: Install Ansible
         run: pip install ansible 
