@@ -38,22 +38,18 @@ jobs:
       - name : Checkout Blog Repo
         uses: actions/checkout@v4
         with:
-          repository: ShortToGround/shorttoground-blog
-          path: "ShortToGround"
           ref: ${{ env.current_branch }}
 
       - name : Checkout Blog Theme
         uses: actions/checkout@v4
         with:
           repository: ShortToGround/Loveit
-          path: "ShortToGround/shorttoground-blog/themes/"
+          path: "/shorttoground-blog/themes/"
 
       # Now we actually build the blog data
       # This should populate ShortToGround/shorttoground-blog/public/ with all of our blog data
       - name : Build Blog Data
-        run: | 
-          cd ShortToGround/shorttoground-blog
-          hugo
+        run: hugo
 
       # Next we will build our container and then publish it to the github registry
       - name : Build blog container
