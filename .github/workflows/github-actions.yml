@@ -8,7 +8,8 @@ on:
 
 env:
   name: production
-  current_branch: ${{ github.head_ref || github.ref_name }} 
+  current_branch: ${{ github.head_ref || github.ref_name }}
+  hugo_version: "0.142.0"
   
 
 jobs:
@@ -23,8 +24,13 @@ jobs:
     steps:
       # First we need to install all of our Dependencies and packages
       - name: Install Dependencies
-        run: sudo apt-get install -y hugo 
-          
+        run: sudo apt-get install -y wget 
+        
+      - name: Download Hugo
+        run: 
+            wget https://github.com/gohugoio/hugo/releases/download/v${{ env.hugo_version }}/hugo_extended_${{ env.hugo_version }}_linux-amd64.tar.gz
+            tar xzvf hugo* -C hugo
+
       - name: Install Ansible
         run: pip install ansible 
           
@@ -44,7 +50,7 @@ jobs:
       # Now we actually build the blog data
       # This should populate ShortToGround/shorttoground-blog/public/ with all of our blog data
       - name : Build Blog Data
-        run: hugo
+        run: hugo/hugo
 
       # Next we will build our container and then publish it to the github registry
       - name : Build blog container
