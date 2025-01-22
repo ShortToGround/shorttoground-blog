@@ -72,7 +72,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ShortToGround/shorttoground-blog-infra
-          path: "ShortToGround/shorttoground-blog-infra"
+          path: "shorttoground-blog-infra"
           ref: ${{ env.current_branch }}
 
       # Next we need to gather our credentials to auth to AWS
