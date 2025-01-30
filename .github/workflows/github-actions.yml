@@ -25,11 +25,6 @@ jobs:
     #   # First we need to install all of our Dependencies and packages
     #   - name: Install Dependencies
     #     run: sudo apt-get install -y hugo
-        
-    #   - name: Download Hugo
-    #     run: |
-    #         wget https://github.com/gohugoio/hugo/releases/download/v${{ env.hugo_version }}/hugo_extended_${{ env.hugo_version }}_linux-amd64.tar.gz
-    #         tar xzvf hugo* -C /tmp
 
       - name: Download Hugo
         run: |
