@@ -2,10 +2,12 @@ FROM alpine:latest
 WORKDIR "/tmp"
 RUN mkdir -p nginx
 # Dependencies
-RUN apk update && apk upgrade && apk add nginx openrc --no-cache
+RUN apk update && apk upgrade && apk add openrc --no-cache
+RUN apk add nginx --no-scripts
+
 RUN adduser -D -g 'www' www
 RUN mkdir -p /var/www/blog/public && chown -R www:www /var/www/blog/public
-
+RUN 
 
 COPY $path/nginx/blog.conf /etc/nginx/nginx.conf
 COPY $path/public /var/www/blog/public
