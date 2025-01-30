@@ -32,7 +32,7 @@ jobs:
             tar xzvf hugo.tar.gz -C /tmp
 
       - name: Install Ansible
-        run: pip install ansible 
+        run: pip install ansible-core
           
       - name: Install Ansible Docker community plugin
         run: ansible-galaxy collection install community.docker
