@@ -2,7 +2,7 @@ FROM alpine:latest
 WORKDIR "/tmp"
 RUN mkdir -p nginx
 # Dependencies
-RUN apk update && apk upgrade && apk add nginx 
+RUN apk update && apk upgrade && apk add nginx openrc --no-cache
 RUN adduser -D -g 'www' www
 RUN mkdir -p /var/www/blog/public && chown -R www:www /var/www/blog/public
 
