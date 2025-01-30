@@ -33,7 +33,7 @@ jobs:
 
       - name: Download Hugo
         run: |
-            curl -Lo hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v${{ env.hugo_version }}/hugo_extended_${{ env.hugo_version }}_linux-amd64.tar.gz
+            curl -o hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v${{ env.hugo_version }}/hugo_extended_${{ env.hugo_version }}_linux-amd64.tar.gz
             tar xzvf hugo.tar.gz -C /tmp
 
       - name: Install Ansible
