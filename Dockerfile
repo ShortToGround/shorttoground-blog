@@ -1,16 +1,21 @@
 FROM alpine:latest
-WORKDIR "/tmp"
-RUN mkdir -p nginx
-# Dependencies
-RUN apk update && apk upgrade && apk add openrc nginx --no-cache
 
+WORKDIR "/tmp"
+
+# Install dependencies
+RUN apk update && apk upgrade && apk add --no-cache nginx
+
+# Create necessary directories
 RUN adduser -D -g 'www' www
 RUN mkdir -p /var/www/blog/public && chown -R www:www /var/www/blog/public
-RUN 
+RUN mkdir -p /run/nginx  # Fix for missing nginx.pid issue
 
-COPY $path/nginx/blog.conf /etc/nginx/nginx.conf
-COPY $path/public /var/www/blog/public
+# Copy configuration and content
+COPY nginx/blog.conf /etc/nginx/nginx.conf
+COPY public /var/www/blog/public
 
-RUN nginx -s reload
-# Networking Config
+# Expose port 8080
 EXPOSE 8080
+
+# Command to run Nginx in the foreground
+CMD ["nginx", "-g", "daemon off;"]
