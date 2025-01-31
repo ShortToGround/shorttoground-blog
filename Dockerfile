@@ -1,13 +1,22 @@
-FROM nginx:latest
+FROM alpine:latest
 
-ARG path
-ENV path=${path}
+WORKDIR "/tmp"
 
-COPY $path/nginx/blog.conf /etc/nginx/nginx.conf
-COPY $path/public /var/www/blog/public
+# Install dependencies
+RUN apk update && apk upgrade && apk add --no-cache nginx
 
-# Restart nginx to load new config
-RUN service nginx restart
+# Create necessary directories
+RUN adduser -D -g 'www' www && \
+    mkdir -p /var/www/blog/public && \
+    chown -R www:www /var/www/blog/public && \
+    mkdir -p /run/nginx  
+    # mkdir -p /run/nginx is a fix for missing nginx.pid issue 
 
-# Networking Config
+# Copy configuration and content
+COPY nginx/blog.conf /etc/nginx/nginx.conf
+COPY public /var/www/blog/public
+
+# Expose port 8080
 EXPOSE 8080
+
+CMD ["nginx", "-g", "daemon off;"]
