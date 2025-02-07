@@ -1,4 +1,7 @@
 # ShortToGround Blog
+[![Build/Deploy Static Site](https://github.com/ShortToGround/shorttoground-blog/actions/workflows/github-actions.yml/badge.svg?branch=master)](https://github.com/ShortToGround/shorttoground-blog/actions/workflows/github-actions.yml)
+
+
 This project is mostly a proof of concept and learning project for me.
 
 This means that sometimes I didn't do the most efficient thing because I was also trying to touch as much tech as possible with this one project.
